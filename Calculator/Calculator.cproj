@@ -138,9 +138,6 @@
     <Compile Include="Calculator.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Calculator.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="DIO.c">
       <SubType>compile</SubType>
     </Compile>
@@ -169,9 +166,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Stack.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="Stack.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="STD.h">

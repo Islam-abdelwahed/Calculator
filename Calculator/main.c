@@ -1,28 +1,47 @@
-
 #include "Buzzer.h"
 #include "STD.h"
 #include "LCD.h"
 #include "KEYPAD.h"
-#include "Calculator.h"
-#include "Stack.h"
 #include <ctype.h>
 #include <stdlib.h>
+#include <string.h>
+#define MAX_SIZE 80
 
-void evaluate(char* expresion){
-	
-	char  buffer[15];
-	sint32 i, op1, op2, len, j, x;
-	 
-	
-	len=sizeof(expresion)/sizeof(expresion[0]);
+int performOperation(int op1, int op2, char op)
+{
+	volatile	int ans;
+	switch (op) {
+		case '+':
+		ans = op2 + op1;
+		break;
+		case '-':
+		ans = op2 - op1;
+		break;
+		case '*':
+		ans = op2 * op1;
+		break;
+		case '/':
+		ans = op2 / op1;
+		break;
+	}
+	return ans;
+}
 
+void evaluate(char* expression)
+{
+	char* postfix = InfixToPostfix(expression);
+	uint8 buffer[15];
+	uint16 i, op1, op2, len, j, x,error=0;
+	len = strlen(postfix);
 	j = 0;
+
 	for (i = 0; i < len; i++) {
 
-		if (expresion[i] >= '0' && expresion[i] <= '9') {
-			buffer[j++] = expresion[i];
+		if (postfix[i] >= '0' && postfix[i] <= '9') {
+			buffer[j++] = postfix[i];
+			push(postfix[i]-'0');
 		}
-		else if (expresion[i] == ' ') {
+		else if (postfix[i] == ' ') {
 			if (j > 0) {
 				buffer[j] = '\0';
 				x = atoi(buffer);
@@ -30,67 +49,84 @@ void evaluate(char* expresion){
 				j = 0;
 			}
 		}
-
-		else if (isOperator(expresion[i])) {
+		else if (IsOperator(postfix[i])) {
+			j = 0;
 			op1 = getTop();
 			pop();
 			op2 = getTop();
 			pop();
-			push(performOperation(op1, op2, expresion[i]));
+			if(postfix[i]=='/' && op1==0)
+				{
+					error=1;
+					break;
+				}
+			push(performOperation(op1, op2, postfix[i]));
 		}
 	}
-	//cout<<"Answer = "<<getTop();
-	LCD_WRITE_INTEGER(getTop());
-
+	if (error)
+	{
+		LCD_WRITE_STRING("Error");
+	}
+	else LCD_WRITE_INTEGER(getTop());
+	free(postfix);
 }
+
+void start(){
+	LOCATE_CURSOR(1, 5);
+	LCD_WRITE_STRING("Calculator");
+	_delay_ms(2000);
+	LCD_CLR();
+	BUZZER_SHORT_BEEP();
+};
 
 int main(void)
 {
+	char expression[MAX_SIZE];
 
 	BUZZER_Init();
 	BUZZER_BEEP_BEEP();
 	LCD_INIT();
-	
+	KEYPAD_INIT();
+
+	start();
+
 	int index = 0;
-	char expression[30]={0};
 
 	while (1)
 	{
-		uint8 KeyPressed = keypadGetValue();
-		if(!KeyPressed )
+		uint8_t keyPressed = keypadGetValue();
+		if (keyPressed != 0)
 		{
-			switch(KeyPressed)
+			BUZZER_SHORT_BEEP();
+			switch (keyPressed)
 			{
 				case 'c':
-				{
-					
-					LCD_CLR();
-					index = 0;
-					
-					break;
-				}
+				if (expression[0] == '\0')
+				LCD_CLR();
+				else{
+					expression[index] = ' ';
+					LCD_WRITE_CHAR(' ');
+				index++;}
+				break;
+
 				case '=':
-								{
-									//evaluate(expression);
-									index = 0;
-									
-									break;
-								}
+				if (expression[0] == '\0')
+				break;
+				LCD_WRITE_CHAR('=');
+				evaluate(expression);
+				index = 0;
+				break;
+
 				default:
+				if (expression[0] == '\0')
+				LCD_CLR();
 				
-				{
-					if(expression[0]=='\0')
-					LCD_CLR();
-					
-					expression[index]=KeyPressed;
-					LCD_WRITE_CHAR(KeyPressed);
-					index++;
-					
-					break;
-				}
+				expression[index] = keyPressed;
+				LCD_WRITE_CHAR(keyPressed);
+				index++;
+				break;
 			}
-			expression[index]='\0';
+			expression[index] = '\0';
 		}
 	}
 }
-

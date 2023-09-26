@@ -1,158 +1,115 @@
-#include "Calculator.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-/*
-  Infix to postfix conversion in C++
-  Input Postfix expression must be in a desired format.
-  Operands and operator, both must be single character.
-  Only '+'  ,  '-'  , '*', '/' and '$' (for exponentiation)  operators are expected.
-*/
-
-
-
+#define MAX_SIZE 80
 
 // Function to evaluate Postfix expression and return output
-char* InfixgetTopostfix(char* expression)
+char* InfixToPostfix(const char* expression);
+
+// Function to verify whether a character is a digit or not.
+int IsOperand(char C);
+
+// Function to verify whether a character is an operator symbol or not.
+int IsOperator(char C);
+
+// Function to verify whether an operator is right associative or not.
+int IsRightAssociative(char op);
+
+// Function to get weight of an operator. An operator with higher weight will have higher precedence.
+int GetOperatorWeight(char op);
+
+// Function to perform an operation and return the result.
+int HasHigherPrecedence(char op1, char op2);
+
+char* InfixToPostfix(const char* expression)
 {
-	// Declaring a Stack from Standard template library in C++. 
-	
-	uint8 len=sizeof(expression)/sizeof(expression[0]);
-	
-	char* postfix = ""; // Initialize postfix as empty string.
-	for ( uint8 i = 0; i < len; i++) {
+	char* postfix = malloc(MAX_SIZE * sizeof(char));
+	int len = strlen(expression);
+	int x = 0;
 
-		// Scanning each character from left. 
-		// If character is a delimitter, move on. 
-		
-		if (expression[i] == ' ' || expression[i] == ',') continue;
+	// Stack to store operators
+	char stack[MAX_SIZE];
+	int top = -1;
 
-		// If character is operator, pop two elements from stack, perform operation and push the result back. 
-		else if (IsOperator(expression[i]))
-		{
-			while (!empty() && getTop() != '(' && HasHigherPrecedence(getTop(), expression[i]))
-			{
-				postfix += getTop();
-				pop();
+	for (int i = 0; i < len; i++) {
+		if (expression[i] == ' ' || expression[i] == ',') {
+			postfix[x++] =' ';
+		}
+		else if (IsOperator(expression[i])) {
+			while (top != -1 && stack[top] != '(' && HasHigherPrecedence(stack[top], expression[i])) {
+				postfix[x++] = stack[top--];
 			}
-			push(expression[i]);
+			stack[++top] = expression[i];
 		}
-		// Else if character is an operand
-		else if (IsOperand(expression[i]))
-		{
-			postfix += expression[i];
+		else if (IsOperand(expression[i])) {
+			postfix[x++] = expression[i];
 		}
-
-		else if (expression[i] == '(')
-		{
-			push(expression[i]);
+		else if (expression[i] == '(') {
+			stack[++top] = expression[i];
 		}
-
-		else if (expression[i] == ')')
-		{
-			while (!empty() && getTop() != '(') {
-				postfix += getTop();
-				pop();
+		else if (expression[i] == ')') {
+			while (top != -1 && stack[top] != '(') {
+				postfix[x++] = stack[top--];
 			}
-			pop();
+			top--; // Discard '(' from the stack
 		}
 	}
 
-	while (!empty()) {
-		postfix += getTop();
-		pop();
+	while (top != -1) {
+		postfix[x++] = stack[top--];
 	}
 
+	postfix[x] = '\0'; // Add null terminator to the postfix expression
 	return postfix;
 }
 
-// Function to verify whether a character is english letter or numeric digit. 
-// We are assuming in this solution that operand will be a single character
-uint8 IsOperand(char C)
+int IsOperand(char C)
 {
-	if (C >= '0' && C <= '9') return 1;
-	if (C >= 'a' && C <= 'z') return 1;
-	if (C >= 'A' && C <= 'Z') return 1;
-	return 0;
+	return (C >= '0' && C <= '9');
 }
 
-// Function to verify whether a character is operator symbol or not. 
-uint8 IsOperator(char C)
+int IsOperator(char C)
 {
-	if (C == '+' || C == '-' || C == '*' || C == '/' || C == '$')
-		return 1;
-
-	return 0;
+	return (C == '+' || C == '-' || C == '*' || C == '/' || C == '$');
 }
 
-// Function to verify whether an operator is right associative or not. 
-uint8 IsRightAssociative(char op)
+int IsRightAssociative(char op)
 {
-	if (op == '$') return 1;
-	return 0;
+	return (op == '$');
 }
 
-// Function to get weight of an operator. An operator with higher weight will have higher precedence. 
-uint8 GegetToperatorWeight(char op)
+int GetOperatorWeight(char op)
 {
-	uint8 weight = -1;
-	switch (op)
-	{
-	case '+':
-	case '-':
+	int weight = 0;
+	switch (op) {
+		case '+':
+		case '-':
 		weight = 1;
 		break;
-	case '*':
-	case '/':
+		case '*':
+		case '/':
 		weight = 2;
 		break;
-	case '$':
+		case '$':
 		weight = 3;
 		break;
 	}
 	return weight;
 }
 
-// Function to perform an operation and return output. 
-uint8 HasHigherPrecedence(char op1, char op2)
+int HasHigherPrecedence(char op1, char op2)
 {
-	uint8 op1Weight = GegetToperatorWeight(op1);
-	uint8 op2Weight = GegetToperatorWeight(op2);
+	int op1Weight = GetOperatorWeight(op1);
+	int op2Weight = GetOperatorWeight(op2);
 
-	// If operators have equal precedence, return 1 if they are left associative. 
-	// return 0, if right associative. 
-	// if operator is left-associative, left one should be given priority. 
-	if (op1Weight == op2Weight)
-	{
-		if (IsRightAssociative(op1)) return 0;
-		else return 1;
+	if (op1Weight == op2Weight) {
+		if (IsRightAssociative(op1)) {
+			return 0;
+		}
+		else {
+			return 1;
+		}
 	}
 	return op1Weight > op2Weight ? 1 : 0;
-}
-
-
-uint8 isOperator(char ch)
-{
-	if (ch == '+' || ch == '-' || ch == '*' || ch == '/')
-	return 1;
-	else
-	return 0;
-}
-
-uint8 performOperation(uint8 op1, uint8 op2, char op)
-{
-	uint8 ans;
-	switch (op) {
-		case '+':
-		ans = op2 + op1;
-		break;
-		case '-':
-		ans = op2 - op1;
-		break;
-		case '*':
-		ans = op2 * op1;
-		break;
-		case '/':
-		ans = op2 / op1;
-		break;
-	}
-	return ans;
 }

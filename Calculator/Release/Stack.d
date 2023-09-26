@@ -1,5 +1,3 @@
-Stack.d Stack.o: .././Stack.c .././Stack.h .././STD.h
-
-.././Stack.h:
+Stack.d Stack.o: .././Stack.c .././STD.h
 
 .././STD.h:

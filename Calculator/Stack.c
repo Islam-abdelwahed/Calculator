@@ -1,8 +1,15 @@
-#include "Stack.h"
+#include "STD.h"
+#define  SIZE 80
 
 
+void push(sint32 c);
+void pop();
+void show();
+uint8 empty();
+sint32 getTop();
 
-sint32 inp_array[SIZE]={};
+
+sint32 inp_array[SIZE]={0};
 sint32 top = -1;
 
 void push(sint32 c)
@@ -27,7 +34,6 @@ void pop()
 	}
 	else
 	{
-		
 		top --;
 	}
 }
